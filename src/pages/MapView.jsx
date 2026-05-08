@@ -14,9 +14,9 @@ const CA_GEO = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood
 const MX_GEO = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/mexico.geojson'
 
 const COLORS = {
-  US: { spotted: '#dc2626', missing: '#fee2e2', missingDark: '#3b1414' },
-  CA: { spotted: '#2563eb', missing: '#dbeafe', missingDark: '#1a2744' },
-  MX: { spotted: '#16a34a', missing: '#dcfce7', missingDark: '#142e1a' },
+  US: { spotted: '#dc2626', missing: '#fee2e2', missingDark: '#7f1d1d' },
+  CA: { spotted: '#60a5fa', missing: '#dbeafe', missingDark: '#1e3a5f' },
+  MX: { spotted: '#4ade80', missing: '#dcfce7', missingDark: '#14532d' },
 }
 
 function CountryMap({ geoUrl, country, projection, projectionConfig, width, height, isSpotted, getCount, onSelect, isDark }) {
