@@ -1,0 +1,16 @@
+{
+  "name": "PlateSpot",
+  "short_name": "PlateSpot",
+  "description": "Track license plates from US states, Canadian provinces, and Mexican states",
+  "start_url": "/PlateSpot/",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
