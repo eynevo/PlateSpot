@@ -28,7 +28,7 @@ function App() {
     <HashRouter>
       <SightingsProvider>
         <div className="flex flex-col h-[100dvh]">
-          <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 safe-top">
+          <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-safe">
             <h1 className="text-lg font-bold tracking-tight text-primary-700 dark:text-primary-400">
               PlateSpot
             </h1>
