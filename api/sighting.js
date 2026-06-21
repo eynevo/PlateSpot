@@ -63,7 +63,7 @@ export async function POST(request) {
 
   const { error } = await supabase.from('sightings').insert(record)
   if (error) {
-    return Response.json({ error: 'Failed to save sighting' }, { status: 500 })
+    return Response.json({ error: 'Failed to save sighting', detail: error.message }, { status: 500 })
   }
 
   return Response.json({
