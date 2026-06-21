@@ -1,26 +1,42 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import * as db from '../data/db'
+import { sync } from '../lib/sync'
 
 const SightingsContext = createContext(null)
 
 export function SightingsProvider({ children }) {
   const [sightings, setSightings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [syncStatus, setSyncStatus] = useState('idle')
 
   const refresh = useCallback(async () => {
     const all = await db.getAllSightings()
     setSightings(all.sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
   }, [])
 
-  useEffect(() => {
-    refresh().finally(() => setLoading(false))
+  const runSync = useCallback(async () => {
+    try {
+      setSyncStatus('syncing')
+      await sync()
+      await refresh()
+      setSyncStatus('done')
+    } catch {
+      setSyncStatus('error')
+    }
   }, [refresh])
+
+  useEffect(() => {
+    refresh()
+      .then(() => runSync())
+      .finally(() => setLoading(false))
+  }, [refresh, runSync])
 
   const add = useCallback(async (sighting) => {
     const record = await db.addSighting(sighting)
     await refresh()
+    runSync().catch(() => {})
     return record
-  }, [refresh])
+  }, [refresh, runSync])
 
   const remove = useCallback(async (id) => {
     await db.deleteSighting(id)
@@ -30,8 +46,9 @@ export function SightingsProvider({ children }) {
   const update = useCallback(async (id, updates) => {
     const record = await db.updateSighting(id, updates)
     await refresh()
+    runSync().catch(() => {})
     return record
-  }, [refresh])
+  }, [refresh, runSync])
 
   const stats = useCallback(() => {
     const uniqueStates = new Set(sightings.map(s => `${s.country}:${s.state}`))
@@ -91,7 +108,7 @@ export function SightingsProvider({ children }) {
   }, [sightings])
 
   return (
-    <SightingsContext.Provider value={{ sightings, loading, add, remove, update, stats, getStreak, exportCSV: db.exportToCSV }}>
+    <SightingsContext.Provider value={{ sightings, loading, syncStatus, add, remove, update, stats, getStreak, triggerSync: runSync, exportCSV: db.exportToCSV }}>
       {children}
     </SightingsContext.Provider>
   )

@@ -1,17 +1,24 @@
 import { openDB } from 'idb'
 
 const DB_NAME = 'platespot'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const STORE = 'sightings'
 
 function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE)) {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
         const store = db.createObjectStore(STORE, { keyPath: 'id' })
         store.createIndex('state', 'state')
         store.createIndex('country', 'country')
         store.createIndex('date', 'date')
+        store.createIndex('synced', 'synced')
+      } else if (oldVersion < 2) {
+        const tx = arguments[3]
+        const store = tx.objectStore(STORE)
+        if (!store.indexNames.contains('synced')) {
+          store.createIndex('synced', 'synced')
+        }
       }
     },
   })
@@ -23,9 +30,19 @@ export async function addSighting(sighting) {
   const record = {
     ...sighting,
     id,
+    source: sighting.source || 'ui',
+    synced: false,
     createdAt: new Date().toISOString(),
   }
   await db.put(STORE, record)
+  return record
+}
+
+export async function addSyncedSighting(record) {
+  const db = await getDB()
+  const existing = await db.get(STORE, record.id)
+  if (existing) return existing
+  await db.put(STORE, { ...record, synced: true })
   return record
 }
 
@@ -39,11 +56,25 @@ export async function getSighting(id) {
   return db.get(STORE, id)
 }
 
+export async function getUnsynced() {
+  const db = await getDB()
+  const all = await db.getAll(STORE)
+  return all.filter(r => !r.synced)
+}
+
+export async function markSynced(id) {
+  const db = await getDB()
+  const record = await db.get(STORE, id)
+  if (!record) return
+  record.synced = true
+  await db.put(STORE, record)
+}
+
 export async function updateSighting(id, updates) {
   const db = await getDB()
   const existing = await db.get(STORE, id)
   if (!existing) return null
-  const updated = { ...existing, ...updates, id }
+  const updated = { ...existing, ...updates, id, synced: false }
   await db.put(STORE, updated)
   return updated
 }

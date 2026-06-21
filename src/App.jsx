@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
-import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import AddSighting from './pages/AddSighting'
 import SightingsList from './pages/SightingsList'
 import MapView from './pages/MapView'
-import { SightingsProvider } from './context/SightingsContext'
+import { SightingsProvider, useSightings } from './context/SightingsContext'
+import { useSupabaseHealth } from './hooks/useSupabaseHealth'
+import SupabaseBanner from './components/SupabaseBanner'
 
 function App() {
   const [dark, setDark] = useState(() => {
@@ -25,47 +27,61 @@ function App() {
     }`
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <SightingsProvider>
-        <div className="flex flex-col h-[100dvh]">
-          <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-safe">
-            <h1 className="text-lg font-bold tracking-tight text-primary-700 dark:text-primary-400">
-              PlateSpot
-            </h1>
-            <button
-              onClick={() => setDark(d => !d)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {dark ? '☀️' : '🌙'}
-            </button>
-          </header>
-
-          <main className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route path="/" element={<AddSighting />} />
-              <Route path="/list" element={<SightingsList />} />
-              <Route path="/map" element={<MapView />} />
-            </Routes>
-          </main>
-
-          <nav className="flex justify-around bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-safe">
-            <NavLink to="/" className={navClass} end>
-              <PlusIcon />
-              <span>Add</span>
-            </NavLink>
-            <NavLink to="/list" className={navClass}>
-              <ListIcon />
-              <span>List</span>
-            </NavLink>
-            <NavLink to="/map" className={navClass}>
-              <MapIcon />
-              <span>Map</span>
-            </NavLink>
-          </nav>
-        </div>
+        <AppShell dark={dark} setDark={setDark} navClass={navClass} />
       </SightingsProvider>
-    </HashRouter>
+    </BrowserRouter>
+  )
+}
+
+function AppShell({ dark, setDark, navClass }) {
+  const { triggerSync } = useSightings()
+  const onHealthy = useCallback(() => {
+    triggerSync()
+  }, [triggerSync])
+  const healthStatus = useSupabaseHealth(onHealthy)
+
+  return (
+    <div className="flex flex-col h-[100dvh]">
+      <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-safe">
+        <h1 className="text-lg font-bold tracking-tight text-primary-700 dark:text-primary-400">
+          PlateSpot
+        </h1>
+        <button
+          onClick={() => setDark(d => !d)}
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Toggle dark mode"
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
+      </header>
+
+      <SupabaseBanner status={healthStatus} />
+
+      <main className="flex-1 overflow-y-auto">
+        <Routes>
+          <Route path="/" element={<AddSighting />} />
+          <Route path="/list" element={<SightingsList />} />
+          <Route path="/map" element={<MapView />} />
+        </Routes>
+      </main>
+
+      <nav className="flex justify-around bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-safe">
+        <NavLink to="/" className={navClass} end>
+          <PlusIcon />
+          <span>Add</span>
+        </NavLink>
+        <NavLink to="/list" className={navClass}>
+          <ListIcon />
+          <span>List</span>
+        </NavLink>
+        <NavLink to="/map" className={navClass}>
+          <MapIcon />
+          <span>Map</span>
+        </NavLink>
+      </nav>
+    </div>
   )
 }
 
